@@ -8,6 +8,8 @@ from lotto_scrape import lotto_scrape
 
 here = Path(__file__).resolve().parent
 exec(open(here / "version.py").read())
+lottos={'megamillions':['http://www.usamega.com/mega-millions-history.asp?p=',92],
+        'powerball':['https://www.usamega.com/powerball-history.asp?p=',112]}
 
 def main():
     '''
@@ -21,14 +23,16 @@ def main():
             epilog=""""
             e.g.
             
+            
             """
             )
-
     parser.add_argument("-d","--database", type=str,default=None,
         required=True, help="Sqlite database")
 
     parser.add_argument("-p","--pg_num", type=int,default=1,
-        required=False, help="If this is the first time, go to the website, and pick the last page. ")
+        required=False, help="""If this is the first time, 
+            set -p to 0 to get all past (see hardwired pg_num in code)
+            """)
 
     parser.add_argument("-l","--logfile", type=str,default=datetime.now().strftime("%Y%j") + ".lottoscrape.log",
         required=False, help="log file name")
@@ -41,15 +45,22 @@ def main():
 
     args=parser.parse_args()
     debug=args.verbose
-    pg_num=args.pg_num
+    pg=args.pg_num
     db=args.database
     logfile=args.logfile
 
     # Run it all
-    urlbase='http://www.usamega.com/mega-millions-history.asp?p='
-    lottery='megamillions'
+    for i in lottos.keys():
+        lottery=i
+        urlbase=lottos[i][0]
+        if pg == 0:
+            pg_num=lottos[i][1]
+        else:
+            pg_num=1
+        print(f'doing {lottery} {urlbase} {pg_num}')
 
-    obj=lotto_scrape(db,lottery,pg_num=pg_num,base_url=urlbase,logfile=logfile,debug=debug)
+        obj=lotto_scrape(db,lottery,pg_num=pg_num,base_url=urlbase,logfile=logfile,debug=debug)
+        obj.call_scraper()
 
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):

@@ -1,9 +1,11 @@
 from bs4 import BeautifulSoup
 import sqlite3
 from urllib.request import Request, urlopen
+from datetime import datetime
 import logging
 from pathlib import Path 
 import sys
+from lotto_scrape.mydb import dbmgr
 
 
 class lotto_scrape(object):
@@ -18,14 +20,17 @@ class lotto_scrape(object):
 
         '''
         self.__name__='lotto_scrape'
-        self._name='lottery_scrape'
+        _name='lottery_scrape'
         self.lottery=lottery
         self.pg_num=pg_num
         self.base_url=base_url
         self.log=self._setup_log(logfile,debug)
-        self.db=self._setup_db(dbname,'schema.sql') 
+        self.db=self._setup_db(dbname,'schema.sql')
+        self.previous_date=datetime.strptime(
+            self.db.most_recent_bydate(self.lottery,'date','date'),"%Y/%m/%d")
+        self.log.debug(f'{_name}: previous data is: {self.previous_date.strftime("%Y/%m/%d")}')
 
-    def call_scaper(self,self.pg_num):
+    def call_scraper(self):
         _name='call_scaper'
         if self.pg_num is None:
             self.log.error(f'{_name}: self.pg_num is None')
@@ -41,17 +46,18 @@ class lotto_scrape(object):
             pgs=[self.pg_num]
 
         for i in pgs:
-            scrape_page(i)
+            self.log.debug(f"{_name}: trying to grab page: {i}")
+            self.scrape_page(i)
 
     def scrape_page(self,pg_num):
         _name='scrape_page'
         '''
         '''
         try:
-            url=f'{self.base_url}={str(self.pg_num)}'
+            url=f'{self.base_url}={str(pg_num)}'
             req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-            soup = BeautifulSoup(urlopen(req).read())
-#            soup = BeautifulSoup(urlopen('http://www.usamega.com/mega-millions-history.asp?p='+page_num).read())
+            self.log.debug(f'{_name} sending request:\n{req}')
+            soup = BeautifulSoup(urlopen(req).read(),features="lxml")
         except Exception as e:
             self.log.error(f'{_name}: Error with ...\n{e}')
             return 
@@ -59,7 +65,6 @@ class lotto_scrape(object):
         for row in soup('table',{'bgcolor':'white'})[0].findAll('tr'):
             tds = row('td')
             if tds[1].a is not None:
-                #date = tds[1].a.string.encode("utf-8")
                 date = tds[1].a.string
                 weekday, month_day,YYYY=date.split(',')
                 month,dayofmonth=month_day.split()
@@ -76,9 +81,14 @@ class lotto_scrape(object):
                         'num3':nums[2],
                         'num4':nums[3],
                         'num5':nums[4],
+                        'moneyball': moneyball,
                         'lddate':datetime.now().strftime("%s")
                     }
-                    self.db.add_rowdata(data,self.lottery)
+                    if x > self.previous_date:
+                        self.log.debug(f"{_name}: adding {data} to db")
+                        self.db.add_rowdata(data,self.lottery)
+                    else:
+                        self.log.info(f"{_name}: not adding {data}, already in db?")
         self.db.commit()                    
 
     def _setup_db(self,dbname,schema_file):
@@ -126,91 +136,3 @@ class lotto_scrape(object):
         return log
 
 
-class dbmgr(object):
-
-    def __init__(self, db,schema_file,log=None):
-        if (log):
-            self.log=logging.getLogger(__name__)
-        else:
-            self.log=logging.getLogger('/dev/null')
-        self.schema_file=schema_file
-        self.conn = sqlite3.connect(db)
-        self.cur = self.conn.cursor()
-        self.schema_cmds=""
-
-    def read_schema_txt(self):
-        _name='read_schema_txt'
-        here = Path(__file__).resolve().parent
-        schema_file= here / self.schema_file
-        self.log.debug(f"{_name}: reading from {schema_file}")
-        try:
-            self.schema_cmds=open(schema_file,'r').read();
-            self.log.debug(f'Spew of schema\n{self.schema_cmds}')
-        except Exception as e:
-            self.log.error(f'{_name}: Problem ... {e}')
-            sys.exit(0)
-
-    def table_exists(self,tbl_name):
-        _name='table_exists'
-        try:
-            cmd=f'SELECT count(*) FROM sqlite_master WHERE type="table" AND name="{tbl_name}"'
-            self.log.debug(f'{_name}: cmd is {cmd}')
-            self.cur.execute(cmd)
-            ans=self.cur.fetchone()
-            if ans[0]:
-                return True
-            else:
-                return False
-        except Exception as e:
-            self.log.error(f'{_name}: error ... {e}')
-
-    def tbl_commands(self,tbl_name):
-        _name="tbl_commands"
-        if len(self.schema_cmds) < 1:
-            self.log.warn(f"{_name}: WTH man, schema_empty, maybe run read_schema_txt first?")
-            return
-
-        try:
-            first=f"CREATE TABLE {tbl_name}"
-            self.log.debug(f'{_name}: index is {first}')
-            start = self.schema_cmds.index( first )
-            end = self.schema_cmds.index( ");", start ) + 2;
-            self.log.debug(f'{_name}: index subset:{start}-{end}')
-            cmds=self.schema_cmds[start:end]
-            return cmds
-        except Exception as e:
-            self.log.error(f"{_name}: {e}")
-            return 
-
-        if not self.table_exists(tbl_name):
-            try:
-                self.cur.execute(schema_cmds)
-            except Exceptiona as e:
-                self.log.error(f"{_name} ... {e}")
-
-    def add_rowdata(self,d_dict,table)
-        _name='add_rowdata'
-        '''
-        Add a new row to a sql table
-
-        :type: dict (key,value)
-        :param d_dict: the key key must be legitmate field
-        :type: str
-        :param table: the name of the table to add data
-        '''
-        try:
-            var_string = ', '.join('?' * len(d_dict))
-            keys=', '.join(d_dict.keys())
-            values=tuple(d_dict.values())
-        #    cmd='INSERT INTO %s (%s) VALUES (%s);' \
-        #        % (table,keys,var_string)
-            cmd=f'INSERT INTO {table} ({keys}) VALUES ({var_string});'
-            self.log.debug(f'{_name}: cmd={cmd}')
-            self.cur.execute(cmd, (values))
-            # when adding lots of rows, the commit slow things down
-#            self.conn.commit();
-            return 1
-        except Exception as e:
-            self.log.error("{_name}: WTF ... {e}")
-    def commit(self):
-        self.conn.commit()
