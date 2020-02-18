@@ -29,12 +29,12 @@ Or install directly from github
 ## Python Dependencies ##
 
 python>=3.6 (script uses f-strings)  
-argparse
-pathlib
-sqlite3
-bs4
-urllib
-logging
+argparse  
+pathlib  
+sqlite3  
+bs4  
+urllib  
+logging  
 
 
 ## Usage/Examples ##
@@ -48,13 +48,13 @@ To see version:
 To build initial database of all past numbers, with debugging:  
 `lottery_scrape -d lotto.sqlite3 -p 0 -vvv`  
 
-To add latest numbers to database:
+To add most recent numbers to database:
 `lottery_scape -d lotto.sqlite3 -p 1`
 
-To report all numbers after 2020-01-01 to terminal:  
+To report all numbers from the database for drawings after 2020-01-01 to the terminal:  
 `lottery_scrape -d lotto.sqlite3 -r -s 2020-01-01` 
 
-To report numbers between 2010-01-01 and 2011-01-01:  
+To report numbers from the database for drawings between 2010-01-01 and 2011-01-01:  
 `lottery_scrape -d lotto.sqlite3 -r -s 2010-01-01 -e 2011-01-01`  
 
 
