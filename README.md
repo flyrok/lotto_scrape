@@ -48,8 +48,8 @@ To see version:
 To build initial database of all past numbers, with debugging:  
 `lottery_scrape -d lotto.sqlite3 -p 0 -vvv`  
 
-To add most recent numbers to database:
-`lottery_scape -d lotto.sqlite3 -p 1`
+To add most recent numbers to database:  
+`lottery_scrape -d lotto.sqlite3 -p 1`
 
 To report all numbers from the database for drawings after 2020-01-01 to the terminal:  
 `lottery_scrape -d lotto.sqlite3 -r -s 2020-01-01` 
