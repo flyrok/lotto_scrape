@@ -9,6 +9,7 @@ CREATE TABLE megamillions
   num4        INTEGER(2) DEFAULT '-',
   num5        INTEGER(2) DEFAULT '-',
   moneyball   INTEGER(2) DEFAULT '-',
+  jackpot     DECIMAL(8) DEFAULT '-',
   lddate      INTEGER(17) DEFAULT -9999999999,
   PRIMARY KEY (epoch)
 );
@@ -24,6 +25,7 @@ CREATE TABLE powerball
   num4        INTEGER(2) DEFAULT '-',
   num5        INTEGER(2) DEFAULT '-',
   moneyball   INTEGER(2) DEFAULT '-',
+  jackpot     DECIMAL(8) DEFAULT '-',
   lddate      INTEGER(17) DEFAULT -9999999999,
   PRIMARY KEY (epoch)
 );

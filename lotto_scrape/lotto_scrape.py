@@ -123,7 +123,7 @@ class lotto_scrape(object):
 
                     # get the moneyball
                     moneyball = tds[3].strong.string
-
+                    jackpot=tds[7].string.split()[0]
                     # throw everything in a dict to add to db
                     # the dict keys needs to match the database columns
                     data={'epoch': x.strftime("%s"),
@@ -135,6 +135,7 @@ class lotto_scrape(object):
                         'num4':nums[3],
                         'num5':nums[4],
                         'moneyball': moneyball,
+                        'jackpot': jackpot,
                         'lddate':datetime.now().strftime("%s")
                     }
                     # check that current date is more recent than
