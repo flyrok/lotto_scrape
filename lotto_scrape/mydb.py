@@ -75,7 +75,7 @@ class dbmgr(object):
         :type: string
             :param table:
         '''
-        command=f"SELECT * FROM {table} WHERE date >= date('{date_start}') and date <= date('{date_end}');"
+        command=f"SELECT * FROM {table} WHERE date >= date('{date_start}') and date <= date('{date_end}') order by date(date);"
 
         self.log.debug(f'{_name}: cmd is:\n\t{command}')
         self.cur.execute(command)
