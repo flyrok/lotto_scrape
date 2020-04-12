@@ -164,6 +164,7 @@ class lotto_scrape(object):
                     out+=f" {bcolors.OKBLUE}{i[j]:02d}" # number fields
                 out+=f" {bcolors.RED}{i[8]:02d}" # moneyball
                 out+=f" {bcolors.OKBLUE}{i[9]:4s}" # jackpot
+                out+=f" {bcolors.OKGREEN}{i[2][0:3]:3s}" # date field
                 print(out)
             return 1
         except Exception as e:
