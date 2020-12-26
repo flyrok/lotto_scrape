@@ -97,6 +97,7 @@ class lotto_scrape(object):
             return 0
 
     def parse_soup(self,soup):
+        import sys
         _name=f"{self.__name__}-parse_soup"
         '''
         soup: soup
@@ -104,37 +105,30 @@ class lotto_scrape(object):
         Try to pull relevant data from web page and
         add to the sqlite3 dates
         '''
-
-        for row in soup('table',{'bgcolor':'white'})[0].findAll('tr'):
+        rows=soup('table',{'class':'results'})[0].findAll('tr')
+        for n,row in enumerate(rows):
             tds = row('td')
-            if tds[1].a is not None:
-                date = tds[1].a.string
-                weekday, month_day,YYYY=date.split(',')
-                month,dayofmonth=month_day.split()
-                # conver to datetime obj
-                x=datetime.strptime(f'{month} {dayofmonth} {YYYY}','%B %d %Y')
+            print(tds)
 
-                self.log.debug(f'{_name}: scrapped date {x} from {month} {dayofmonth} {YYYY}')
+            if tds[0].a is not None: 
+                date = tds[0].a.string
+                weekday, month, month_day,year=date.split(',')
+                x=datetime.strptime(f'{month.strip()} {month_day.strip()} {year.strip()}','%B %d %Y')
+                self.log.debug(f'{_name}: scrapped date {x} from {month} {month_day} {year}')
+                
+                numbers=tds[0].find_all('li')
+                jackpot=tds[1].a.string.split()[0]
 
-                if tds[3].b is not None:
-                    # make numbers readable
-                    number = tds[3].b.string.split()
-                    nums= [int(i) for i in number if (number.index(i))%2==0]
-
-                    # get the moneyball
-                    moneyball = tds[3].strong.string
-                    jackpot=tds[7].string.split()[0]
-                    # throw everything in a dict to add to db
-                    # the dict keys needs to match the database columns
+                if len(numbers) == 7:
                     data={'epoch': x.strftime("%s"),
                         'date': x.strftime("%Y-%m-%d"),
                         'weekday': x.strftime("%A"),
-                        'num1': nums[0],
-                        'num2':nums[1],
-                        'num3':nums[2],
-                        'num4':nums[3],
-                        'num5':nums[4],
-                        'moneyball': moneyball,
+                        'num1': numbers[0].string,
+                        'num2':numbers[1].string,
+                        'num3':numbers[2].string,
+                        'num4':numbers[3].string,
+                        'num5':numbers[4].string,
+                        'moneyball': numbers[5].string,
                         'jackpot': jackpot,
                         'lddate':datetime.now().strftime("%s")
                     }
