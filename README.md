@@ -57,4 +57,9 @@ To report all numbers from the database for drawings after 2020-01-01 to the ter
 To report numbers from the database for drawings between 2010-01-01 and 2011-01-01:  
 `lottery_scrape -d lotto.sqlite3 -r -s 2010-01-01 -e 2011-01-01`  
 
+Handy aliases  
+`alias lotto_get='lotto_scrape -d $HOME/Dropbox/lotto.db -p 1'`  
+`alias lotto_show='lotto_scrape -d $HOME/Dropbox/lotto.db -r -s $(date --date="-5 days" "+%Y-%m-%d")'`
+
+
 
